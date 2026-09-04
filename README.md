@@ -34,6 +34,7 @@
 <img src="https://raw.githubusercontent.com/touchnggrass/src/main/img/art/2f920a1344e04164897280db48fa20c3.jpg" alt="2f920a1344e04164897280db48fa20c3.jpg" style="height: 200px; width: auto; display: block; border-radius: 8px;">
 <img src="https://raw.githubusercontent.com/touchnggrass/src/main/img/art/5cbb77f7dca24006a739619487865b4c.jpg" alt="5cbb77f7dca24006a739619487865b4c.jpg" style="height: 200px; width: auto; display: block; border-radius: 8px;">
 <img src="https://raw.githubusercontent.com/touchnggrass/src/main/img/art/3b81f0292c384b6b908d4d45ab58706a.jpg" alt="3b81f0292c384b6b908d4d45ab58706a.jpg" style="height: 200px; width: auto; display: block; border-radius: 8px;">
+<img src="https://raw.githubusercontent.com/touchnggrass/src/main/img/art/43fe6d39ab1e4d4aa22292b5f067449f.png" alt="43fe6d39ab1e4d4aa22292b5f067449f.png" style="height: 200px; width: auto; display: block; border-radius: 8px;">
 <img src="https://raw.githubusercontent.com/touchnggrass/src/main/img/art/d9f698d92f8744b4a4ac042431a903f4.png" alt="d9f698d92f8744b4a4ac042431a903f4.png" style="height: 200px; width: auto; display: block; border-radius: 8px;">
 <img src="https://raw.githubusercontent.com/touchnggrass/src/main/img/art/353e7175cd2a40a5ac8240b7e3fd3077.png" alt="353e7175cd2a40a5ac8240b7e3fd3077.png" style="height: 200px; width: auto; display: block; border-radius: 8px;">
 </div>
