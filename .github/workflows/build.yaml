@@ -1,0 +1,54 @@
+name: ✶ 
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: checkout repo
+      uses: actions/checkout@v4
+
+    - name: git pull
+      run: |-
+        git pull
+
+    - name: setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.13
+
+    - name: pip caching
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/src/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: pip install
+      run: |
+        python -m pip install -r src/requirements.txt
+
+    - name: rename files
+      run: |-
+        python src/build.py img
+
+    - name: push if changed
+      run: |-
+        git config --global user.email "touchnggrass@gmail.com"
+        git config --global user.name "not touchnggrass"
+
+        git add -A
+
+        if git diff --cached --quiet; then
+          echo "×"
+        else
+          git commit --amend -m "✶"
+          git push -f
+        fi
