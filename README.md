@@ -54,8 +54,6 @@
 <img src="https://raw.githubusercontent.com/touchnggrass/src/main/img/cute/21fab42f8296495795cfb3a668df5eee.jpg" alt="21fab42f8296495795cfb3a668df5eee.jpg" style="height: 200px; width: auto; display: block; border-radius: 8px;">
 </div>
 
-## `icons`
-
 ## `meme`
 
 <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
