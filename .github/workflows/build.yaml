@@ -49,6 +49,6 @@ jobs:
         if git diff --cached --quiet; then
           echo "×"
         else
-          git commit --amend -m "✶"
+          git commit -m "✶"
           git push -f
         fi

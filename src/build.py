@@ -13,7 +13,12 @@ from PIL import Image, ImageStat
 README_NAME = "README.md"
 DEFAULT_RAW_BASE_URL = "https://raw.githubusercontent.com/touchnggrass/src/main/img"
 UUID_HEX_PATTERN = re.compile(r"[0-9a-fA-F]{32}")
+SUPPORTED_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}
 SCRIPT_PATH = Path(__file__).resolve()
+FOLDER_ORDER = [
+    "wallpapers", 
+    "art",
+]
 
 
 def has_uuid_name(path: Path) -> bool:
@@ -40,8 +45,8 @@ def image_color_sort_key(path: Path) -> tuple[float, float, float]:
     return (hue, saturation, value)
 
 
-def rename_files(directory: Path, raw_base_url: str, dry_run: bool = False) -> None:
-    files = sorted(
+def image_files(directory: Path) -> list[Path]:
+    return sorted(
         path
         for path in directory.iterdir()
         if path.is_file()
@@ -49,19 +54,44 @@ def rename_files(directory: Path, raw_base_url: str, dry_run: bool = False) -> N
         and path.name != README_NAME
         and path.resolve() != SCRIPT_PATH
     )
+
+
+def rename_files_in_directory(directory: Path) -> list[tuple[Path, Path]]:
+    files = image_files(directory)
     used_names = {path.name for path in files}
     renames = []
     for path in files:
-        if has_uuid_name(path):
+        suffix = path.suffix.lower()
+        if suffix == ".jpeg":
+            destination_suffix = ".jpg"
+        elif suffix in SUPPORTED_IMAGE_SUFFIXES:
+            destination_suffix = suffix
+        else:
+            destination_suffix = ".png"
+        if has_uuid_name(path) and destination_suffix == path.suffix:
             renames.append((path, path))
             continue
-        destination = path.with_name(f"{uuid.uuid4().hex}{path.suffix}")
+        destination = path.with_name(f"{uuid.uuid4().hex}{destination_suffix}")
         while destination.name in used_names:
-            destination = path.with_name(f"{uuid.uuid4().hex}{path.suffix}")
+            destination = path.with_name(f"{uuid.uuid4().hex}{destination_suffix}")
         used_names.add(destination.name)
         renames.append((path, destination))
 
-    renames = sorted(renames, key=lambda item: image_color_sort_key(item[0]))
+    return sorted(renames, key=lambda item: image_color_sort_key(item[0]))
+
+
+def rename_files(directory: Path, raw_base_url: str, dry_run: bool = False) -> None:
+    folders = {path.name: path for path in directory.iterdir() if path.is_dir()}
+    ordered_folders = [folders[name] for name in FOLDER_ORDER if name in folders]
+    ordered_folders.extend(
+        path for name, path in sorted(folders.items()) if name not in FOLDER_ORDER
+    )
+    directories = [directory, *ordered_folders]
+    directory_renames = [
+        (current_directory, rename_files_in_directory(current_directory))
+        for current_directory in directories
+    ]
+    renames = [rename for _, current_renames in directory_renames for rename in current_renames]
 
     for source, destination in renames:
         if source != destination:
@@ -70,29 +100,45 @@ def rename_files(directory: Path, raw_base_url: str, dry_run: bool = False) -> N
     if dry_run:
         return
 
-    temporary_renames = [
-        (source, source.with_name(f".{uuid.uuid4().hex}.rename"))
-        for source, destination in renames
-        if source != destination
-    ]
-    for source, temporary in temporary_renames:
-        source.rename(temporary)
-    destinations = [destination for source, destination in renames if source != destination]
-    for destination, (_, temporary) in zip(destinations, temporary_renames):
-        temporary.rename(destination)
+    for _, current_renames in directory_renames:
+        temporary_renames = [
+            (source, source.with_name(f".{uuid.uuid4().hex}.rename"))
+            for source, destination in current_renames
+            if source != destination
+        ]
+        for source, temporary in temporary_renames:
+            source.rename(temporary)
+        destinations = [destination for source, destination in current_renames if source != destination]
+        for destination, (_, temporary) in zip(destinations, temporary_renames):
+            if destination.suffix == ".png" and temporary.suffix.lower() not in SUPPORTED_IMAGE_SUFFIXES:
+                with Image.open(temporary) as image:
+                    image.save(destination, format="PNG")
+                temporary.unlink()
+            else:
+                temporary.rename(destination)
 
-    image_gallery = [
-        '<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">',
-    ]
-    for _, destination in renames:
-        link = f"{raw_base_url.rstrip('/')}/{quote(destination.name)}"
-        image_gallery.append(
-            f'<img src="{link}" alt="{destination.name}" '
-            f'style="height: 200px; width: auto; display: block; border-radius: 8px;">'
-        )
-    image_gallery.append("</div>")
+    readme_sections = ["# src"]
+    for current_directory, current_renames in directory_renames:
+        if current_directory != directory:
+            readme_sections.append(f"## `{current_directory.name}`")
+        if not current_renames:
+            continue
+        image_gallery = [
+            '<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">',
+        ]
+        relative_directory = current_directory.relative_to(directory)
+        for _, destination in current_renames:
+            relative_path = relative_directory / destination.name
+            link = f"{raw_base_url.rstrip('/')}/{quote(str(relative_path), safe='/')}"
+            image_gallery.append(
+                f'<img src="{link}" alt="{destination.name}" '
+                f'style="height: 200px; width: auto; display: block; border-radius: 8px;">'
+            )
+        image_gallery.append("</div>")
+        readme_sections.append("\n".join(image_gallery))
+
     root_readme = directory.parent / README_NAME
-    root_readme.write_text("# src\n\n" + "\n".join(image_gallery) + "\n")
+    root_readme.write_text("\n\n".join(readme_sections) + "\n")
 
 
 def main() -> None:
